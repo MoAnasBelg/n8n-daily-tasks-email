@@ -1,0 +1,78 @@
+{
+  "name": "Daily Tasks Email Reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [32, 0],
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "PUT_YOUR_GOOGLE_SHEET_ID_HERE",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [240, 0],
+      "id": "google-sheets",
+      "name": "Read Tasks From Google Sheets"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# This node collects tasks from Google Sheets and formats them for email\n\n# List to store all tasks\ntasks_list = []\n\n# Loop through each row received from Google Sheets\nfor item in _items:\n    # Make sure the column 'tasks' exists and is not empty\n    if 'tasks' in item['json'] and item['json']['tasks']:\n        tasks_list.append(item['json']['tasks'])\n\n# Join tasks using HTML line breaks so Gmail displays each task on a new line\ncombined_text = '<br>'.join(tasks_list)\n\n# Return formatted text for the next node (Gmail)\nreturn [{\n    'json': {\n        'tasksText': combined_text\n    }\n}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [448, 0],
+      "id": "python-code",
+      "name": "Format Tasks (Python)"
+    },
+    {
+      "parameters": {
+        "sendTo": "RECEIVER_EMAIL_HERE",
+        "subject": "Daily Tasks Reminder",
+        "message": "=Here are your tasks for today:<br><br>{{ $json.tasksText }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [656, 0],
+      "id": "gmail-send",
+      "name": "Send Tasks Email"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Read Tasks From Google Sheets", "type": "main", "index": 0 }]]
+    },
+    "Read Tasks From Google Sheets": {
+      "main": [[{ "node": "Format Tasks (Python)", "type": "main", "index": 0 }]]
+    },
+    "Format Tasks (Python)": {
+      "main": [[{ "node": "Send Tasks Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false
+}
