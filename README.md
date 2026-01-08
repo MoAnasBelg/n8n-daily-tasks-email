@@ -28,11 +28,11 @@ This n8n workflow sends a daily email reminder containing tasks stored in a Goog
 | tasks |
 |------|
 | get orders |
-| EAT BREAKFAST |
-| LEARN json |
-| READ BOOK |
+| EAT |
+| LEARN| 
+| READ |
 | work |
-| GYM |
+
 
 ⚠️ Column name must be exactly: `tasks`
 
